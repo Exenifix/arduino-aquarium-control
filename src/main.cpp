@@ -4,7 +4,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <IRremote.h>
+#include "TinyIRSender.hpp"
 
 // Thermistor constants
 #define THERM_PIN A0
@@ -15,9 +15,19 @@
 // Display constants
 #define DISPLAY_ADDRESS 0x3C
 
+// Remote constants
+#define IR_SENDER_PIN 2
+#define IR_CMD_OFF 0x6
+#define IR_CMD_ON 0x7
+#define IR_CMD_SUNRISE 0xD
+#define IR_CMD_NOON 0x15
+#define IR_CMD_EVENING 0xB
+#define IR_CMD_NEON 0x16
+
 // Other constants
 #define MIN_OPTIMAL_TEMP 23
 #define MAX_OPTIMAL_TEMP 27
+#define IR_SYNC_INTERVAL 10000
 
 // Bitmaps
 #define WARNING_BITMAP_H 16
@@ -39,11 +49,17 @@ bool temp_warn = false;
 int hour;
 int minute;
 bool blink = false;
+uint8_t current_color = IR_CMD_OFF;
+unsigned long last_ir_update = 0;
 
 [[noreturn]] void halt() {
     while (true) {
         delay(10);
     }
+}
+
+void send_ir_command(uint8_t cmd) {
+    sendNEC(IR_SENDER_PIN, 0, cmd, 1);
 }
 
 void update_temp() {
@@ -61,10 +77,66 @@ void update_datetime() {
     minute = now.minute();
 }
 
+uint8_t get_current_color() {
+    if (hour < 8) {
+        return IR_CMD_OFF;
+    }
+    if (hour < 10) {
+        return IR_CMD_SUNRISE;
+    }
+    if (hour < 12) {
+        return IR_CMD_NOON;
+    }
+    if (hour < 18) {
+        return IR_CMD_OFF;
+    }
+    if (hour < 20) {
+        return IR_CMD_EVENING;
+    }
+    if (hour < 22) {
+        return IR_CMD_NEON;
+    }
+    return IR_CMD_OFF;
+}
+
+const __FlashStringHelper *get_current_color_name() {
+    switch (current_color) {
+        case IR_CMD_OFF:
+            return F("OFF");
+            case IR_CMD_SUNRISE:
+            return F("SUN");
+            case IR_CMD_NOON:
+            return F("LIT");
+            case IR_CMD_EVENING:
+            return F("EVE");
+            case IR_CMD_NEON:
+            return F("NEO");
+        default: return F("NAN");
+    }
+}
+
 void gather_data() {
     update_temp();
     update_outside_temp();
     update_datetime();
+}
+
+void update_ir() {
+    if (millis() - last_ir_update < IR_SYNC_INTERVAL) {
+        return;
+    }
+    last_ir_update = millis();
+
+    auto new_color = get_current_color();
+    if (current_color == new_color) {
+        return;
+    }
+    if (current_color == IR_CMD_OFF) {
+        send_ir_command(IR_CMD_ON);
+        delay(100);  // will mess up a blink for one time, but it's acceptable
+    }
+    send_ir_command(new_color);
+    current_color = new_color;
 }
 
 void update_display() {
@@ -101,6 +173,10 @@ void update_display() {
     display.print(outside_temp, 1);
     display.print(F("C"));
 
+    // current lights status
+    display.setCursor(57, 55);
+    display.print(get_current_color_name());
+
     display.display();
 }
 
@@ -133,11 +209,12 @@ void setup() {
     Serial.begin(9600);
     setup_rtc();
     setup_display();
+    last_ir_update = millis();
 }
 
 void loop() {
     gather_data();
+    update_ir();
     update_display();
-
     delay(1000);
 }
