@@ -117,7 +117,7 @@ void setup_rtc() {
         rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     }
 
-    Serial.println("[OK] RTC initialized");
+    Serial.println(F("[OK] RTC initialized"));
 }
 
 void setup_display() {
