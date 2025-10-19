@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <IRremote.h>
 
 // Thermistor constants
 #define THERM_PIN A0
@@ -104,15 +105,15 @@ void update_display() {
 }
 
 void setup_rtc() {
-    Serial.println("Initializing RTC");
+    Serial.println(F("Initializing RTC"));
     if (!rtc.begin()) {
-        Serial.println("Failed to initialize RTC");
+        Serial.println(F("Failed to initialize RTC"));
         Serial.flush();
         halt();
     }
 
     if (rtc.lostPower()) {
-        Serial.println("RTC lost power, setting time to compile datetime");
+        Serial.println(F("RTC lost power, setting time to compile datetime"));
         rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     }
 
@@ -120,40 +121,16 @@ void setup_rtc() {
 }
 
 void setup_display() {
-    Serial.println("Initializing display");
+    Serial.println(F("Initializing display"));
     if (!display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS)) {
-        Serial.println("Failed to initialize display!");
+        Serial.println(F("Failed to initialize display!"));
         halt();
     }
-    Serial.println("[OK] Display initialized");
-}
-
-void scanI2C() {
-    Serial.println("Scanning I2C devices...");
-    byte error, address;
-    int devices = 0;
-
-    for(address = 1; address < 127; address++ ) {
-        Wire.beginTransmission(address);
-        error = Wire.endTransmission();
-
-        if (error == 0) {
-            Serial.print("I2C device found at address 0x");
-            if (address < 16) Serial.print("0");
-            Serial.print(address, HEX);
-            Serial.println();
-            devices++;
-        }
-    }
-
-    if (devices == 0) {
-        Serial.println("No I2C devices found");
-    }
+    Serial.println(F("[OK] Display initialized"));
 }
 
 void setup() {
     Serial.begin(9600);
-    scanI2C();
     setup_rtc();
     setup_display();
 }
@@ -161,5 +138,6 @@ void setup() {
 void loop() {
     gather_data();
     update_display();
+
     delay(1000);
 }
