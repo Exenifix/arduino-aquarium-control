@@ -34,7 +34,7 @@
 #define WARNING_BITMAP_W 16
 static const unsigned char PROGMEM warning_bitmap[] = {
     0x01, 0x80, 0x03, 0xc0, 0x06, 0x60, 0x04, 0x20, 0x0d, 0xb0, 0x09, 0x90, 0x19, 0x98, 0x11, 0x88,
-0x31, 0x8c, 0x21, 0x84, 0x61, 0x86, 0x40, 0x02, 0xc0, 0x03, 0x81, 0x81, 0x80, 0x01, 0xff, 0xff
+    0x31, 0x8c, 0x21, 0x84, 0x61, 0x86, 0x40, 0x02, 0xc0, 0x03, 0x81, 0x81, 0x80, 0x01, 0xff, 0xff
 };
 
 // Lib objects
@@ -103,13 +103,13 @@ const __FlashStringHelper *get_current_color_name() {
     switch (current_color) {
         case IR_CMD_OFF:
             return F("OFF");
-            case IR_CMD_SUNRISE:
+        case IR_CMD_SUNRISE:
             return F("SUN");
-            case IR_CMD_NOON:
+        case IR_CMD_NOON:
             return F("LIT");
-            case IR_CMD_EVENING:
+        case IR_CMD_EVENING:
             return F("EVE");
-            case IR_CMD_NEON:
+        case IR_CMD_NEON:
             return F("NEO");
         default: return F("NAN");
     }
@@ -133,7 +133,7 @@ void update_ir() {
     }
     if (current_color == IR_CMD_OFF) {
         send_ir_command(IR_CMD_ON);
-        delay(100);  // will mess up a blink for one time, but it's acceptable
+        delay(100); // will mess up a blink for one time, but it's acceptable
     }
     send_ir_command(new_color);
     current_color = new_color;
