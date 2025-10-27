@@ -168,7 +168,7 @@ void update_ir() {
     last_ir_update = millis();
 
     auto new_color = get_current_color();
-    if (current_color == IR_CMD_OFF) {
+    if (current_color == IR_CMD_OFF && new_color != current_color) {
         send_ir_command(IR_CMD_ON);
         delay(300); // will mess up a blink for one time, but it's acceptable
     }
