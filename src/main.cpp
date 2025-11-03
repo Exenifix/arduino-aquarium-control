@@ -22,27 +22,27 @@
 #define IR_CMD_ON 0x7
 #define IR_CMD_SUNRISE 0xD
 #define IR_CMD_NOON 0x15
-#define IR_CMD_EVENING 0x11
+#define IR_CMD_EVENING 0x12
 #define IR_CMD_NEON 0x16
 
 // Servo constants
 #define SERVO_PIN 6
 #define SERVO_CALIB (-3)
-#define SERVO_DEGREE 30
+#define SERVO_DEGREE 40
 #define SERVO_DELAY_MS 250
 
 // Other constants
 #define MIN_OPTIMAL_TEMP 23
 #define MAX_OPTIMAL_TEMP 27
 #define IR_SYNC_INTERVAL 10000
-#define FISH_FEED_HOUR 17
+#define FISH_FEED_HOUR 18
 #define FEED_BUTTON_PIN 4
-static const int PROGMEM color_progress[][2] {
+static const int PROGMEM color_progress[][2]{
     {-2, 8},
     {8, 10},
     {10, 12},
-    {12, 18},
-    {18, 20},
+    {12, 17},
+    {17, 20},
     {20, 22},
     {22, 32}
 };
@@ -106,7 +106,7 @@ uint8_t get_current_color() {
     if (hour < 12) {
         return IR_CMD_NOON;
     }
-    if (hour < 18) {
+    if (hour < 17) {
         return IR_CMD_OFF;
     }
     if (hour < 20) {
@@ -250,6 +250,11 @@ void setup_rtc() {
         rtc.clearAlarm(1);
         rtc.setAlarm1(DateTime(2025, 1, 1, FISH_FEED_HOUR), DS3231_A1_Hour);
         rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    }
+
+    if (rtc.getAlarm1().hour() != FISH_FEED_HOUR) {
+        rtc.clearAlarm(1);
+        rtc.setAlarm1(DateTime(2025, 1, 1, FISH_FEED_HOUR), DS3231_A1_Hour);
     }
 
     Serial.println(F("[OK] RTC initialized"));
