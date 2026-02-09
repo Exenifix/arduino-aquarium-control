@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <GyverNTC.h>
+#include <GyverDS18.h>
 #include <RTClib.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -8,10 +8,7 @@
 #include <Servo.h>
 
 // Thermistor constants
-#define THERM_PIN A0
-#define THERM_RES 10000
-#define THERM_BETA 3950
-#define THERM_SAMPLES 50
+#define THERM_PIN 8
 
 // Display constants
 #define DISPLAY_ADDRESS 0x3C
@@ -56,7 +53,7 @@ static const unsigned char PROGMEM warning_bitmap[] = {
 };
 
 // Lib objects
-GyverNTC therm(THERM_PIN, THERM_RES, THERM_BETA);
+GyverDS18Single ds(THERM_PIN);
 RTC_DS3231 rtc;
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 Servo servo;
@@ -82,7 +79,9 @@ void send_ir_command(uint8_t cmd) {
 }
 
 void update_temp() {
-    temp = therm.getTempAverage(50);
+    if (!ds.tick()) {
+        temp = ds.getTemp();
+    }
     temp_warn = temp <= MIN_OPTIMAL_TEMP || temp >= MAX_OPTIMAL_TEMP;
 }
 
